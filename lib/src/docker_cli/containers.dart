@@ -16,10 +16,14 @@ class Containers {
     final containerCache = <Container>[];
 
     //if (containerCache.isEmpty) {
-    var args =
-        '''ls --format "table {{.ID}}|{{.Image}}|{{.CreatedAt}}|{{.Status}}|{{.Ports}}|{{.Names}}"''';
+    final args = [
+      'ls',
+      '--format',
+      'table {{.ID}}|{{.Image}}|{{.CreatedAt}}|{{.Status}}|{{.Ports}}|{{.Names}}'
+    ];
+
     if (!excludeStopped) {
-      args += ' --all';
+      args.add('--all');
     }
 
     final lines = dockerRun('container', args)

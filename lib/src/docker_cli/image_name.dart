@@ -1,5 +1,3 @@
-import 'package:dcli/dcli.dart';
-
 import 'image.dart';
 
 /// Used to parse and hold the components of a docker image name.
@@ -88,8 +86,6 @@ class ImageName {
     String? repository;
     String name;
     String? tag;
-
-    Settings().verbose(fullname);
 
     if (fullname.contains('/')) {
       var parts = fullname.split('/');

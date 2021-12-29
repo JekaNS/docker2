@@ -1,4 +1,4 @@
-import 'package:dcli/dcli.dart';
+import 'dart:io';
 import 'package:docker2/docker2.dart';
 
 void main(List<String> args) {
@@ -26,13 +26,13 @@ void main(List<String> args) {
 
   // start the container.
   container.start();
-  sleep(2);
+  sleep(const Duration(seconds: 2));
 
   /// stop the container.
   container.stop();
 
   while (container.isRunning) {
-    sleep(1);
+    sleep(const Duration(seconds: 1));
   }
   container.delete();
 }

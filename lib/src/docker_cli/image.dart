@@ -59,16 +59,16 @@ class Image {
   ///
   void delete({bool force = false}) {
     if (force) {
-      dockerRun('image', 'rm -f $imageid');
+      dockerRun('image', ['rm', '-f', imageid!]);
     } else {
-      dockerRun('image', 'rm $imageid');
+      dockerRun('image', ['rm', imageid!]);
     }
   }
 
   /// Pulls a docker image from a remote repository using the
   /// images [fullname]
   void pull() {
-    dockerRun('pull', fullname);
+    dockerRun('pull', [fullname]);
   }
 
   /// creates a container with the name [containerName] using
@@ -85,13 +85,13 @@ class Image {
       throw ContainerExistsException(containerName);
     }
 
-    var cmdArgs = '--name $containerName $fullname';
+    final cmdArgs = ['--name', containerName, fullname];
 
     if (args != null) {
-      cmdArgs += ' ${args.join(' ')}';
+      cmdArgs.addAll(args);
     }
     if (argString != null) {
-      cmdArgs += ' $argString';
+      cmdArgs.add(argString);
     }
 
     final lines = dockerRun('create', cmdArgs);

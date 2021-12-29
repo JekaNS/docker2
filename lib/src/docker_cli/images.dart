@@ -1,5 +1,3 @@
-import 'package:dcli/dcli.dart';
-
 import 'docker.dart';
 import 'exceptions.dart';
 import 'image.dart';
@@ -15,8 +13,13 @@ class Images {
   /// Gets a list of of docker images.
   List<Image> get images {
     final imageCache = <Image>[];
-    final lines = dockerRun('images',
-            '''--format "table {{.ID}}|{{.Repository}}|{{.Tag}}|{{.CreatedAt}}|{{.Size}}"''')
+    final lines = dockerRun(
+        'images',
+        [
+          '--format',
+          'table {{.ID}}|{{.Repository}}|{{.Tag}}|{{.CreatedAt}}|{{.Size}}'
+        ]
+    )
         // remove the heading.
         .toList()
       ..removeAt(0);
@@ -105,8 +108,6 @@ class Images {
   List<Image> findAllByName(String imageName) {
     final match = Image.fromName(imageName);
 
-    Settings().verbose('Match ${match.repository} ${match.name} ${match.tag}');
-
     final list = findByParts(
         repository: match.repository, name: match.name, tag: match.tag);
     return list;
@@ -134,7 +135,7 @@ class Images {
   /// Runs the docker pull command to pull the
   /// image with name [fullname]
   Image? pull({required String fullname}) {
-    dockerRun('pull', fullname);
+    dockerRun('pull', [fullname]);
     // flushCache();
     return findByName(fullname);
   }

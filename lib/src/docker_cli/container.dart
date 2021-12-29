@@ -25,18 +25,20 @@ class Container {
   factory Container.create(Image image,
       {List<VolumeMount> volumes = const <VolumeMount>[],
       bool readonly = false}) {
-    var volarg = '';
+    final volarg = <String>[];
     if (volumes.isNotEmpty) {
       for (final mount in volumes) {
         final readonlyArg = readonly ? ',readonly' : '';
 
         // ignore: use_string_buffers
-        volarg += "--mount 'type=volume,source=${mount.volume.name}"
-            ",destination=${mount.mountPath}$readonlyArg'";
+        volarg.addAll([
+          '--mount',
+          'type=volume,source=${mount.volume.name}' +
+            ',destination=${mount.mountPath}$readonlyArg']);
       }
     }
     final containerid =
-        dockerRun('container', 'create $volarg ${image.name}').first;
+        dockerRun('container', ['create', ...volarg, image.name]).first;
 
     return Containers().findByContainerId(containerid)!;
   }
@@ -82,8 +84,10 @@ class Container {
   List<Volume> get volumes {
     final volumes = <Volume>[];
 
-    final line =
-        dockerRun('inspect', '$containerid --format "{{json .Mounts}}"').first;
+    final line = dockerRun(
+        'inspect',
+        [containerid,'--format', '{{json .Mounts}}']
+    ).first;
 
     if (line == '[]') {
       return volumes;
@@ -121,7 +125,7 @@ class Container {
   /// If the container is not running then no action is taken.
   void stop() {
     if (isRunning) {
-      dockerRun('stop', containerid);
+      dockerRun('stop', [containerid]);
     }
   }
 
@@ -139,32 +143,32 @@ class Container {
       throw ContainerAlreadyRunning();
     }
 
-    var cmdArgs = containerid;
+    var cmdArgs = [containerid];
 
     if (args != null) {
-      cmdArgs += ' ${args.join(' ')}';
+      cmdArgs.addAll(args);
     }
     if (argString != null) {
-      cmdArgs += ' $argString';
+      cmdArgs.add(argString);
     }
 
     var terminal = false;
     if (!daemon) {
-      cmdArgs = '--attach --interactive $cmdArgs';
+      cmdArgs = ['--attach', '--interactive', ...cmdArgs];
       terminal = true;
     }
     dockerRun('start', cmdArgs, terminal: terminal);
   }
 
   /// Returns true if the container is currently running.
-  bool get isRunning =>
-      dockerRun('container', "inspect -f '{{.State.Running}}' $containerid")
-          .first ==
-      'true';
+  bool get isRunning => dockerRun(
+      'container',
+      ['inspect', '-f', '{{.State.Running}}', 'containerid']
+  ).first == 'true';
 
   /// deletes this docker container.
   void delete() {
-    dockerRun('container', 'rm $containerid');
+    dockerRun('container', ['rm', containerid]);
   }
 
   /// writes this containers docker logs to the console
@@ -175,12 +179,12 @@ class Container {
     if (limit != 0) {
       limitFlag = '-n $limit';
     }
-    dockerRun('logs', '$limitFlag $containerid');
+    dockerRun('logs', [limitFlag, containerid]);
   }
 
   /// Attaches to the running container and starts a bash command prompt.
   void cli() {
-    dockerRun('exec', '-it $containerid /bin/bash', terminal: true);
+    dockerRun('exec', ['-it', containerid, '/bin/bash'], terminal: true);
   }
 
   @override

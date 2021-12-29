@@ -1,4 +1,4 @@
-import 'package:dcli/dcli.dart';
+import 'dart:io';
 
 import 'container.dart';
 import 'containers.dart';
@@ -87,21 +87,22 @@ class Docker {
   /// The [args] list is added before the [argString].
   void run(Image image,
       {List<String>? args, String? argString, bool daemon = true}) {
-    var cmdArgs = '';
+    var cmdArgs = <String>[];
 
     if (args != null) {
-      cmdArgs += ' ${args.join(' ')}';
+      cmdArgs.addAll(args);
     }
     if (argString != null) {
-      cmdArgs += ' $argString';
+      cmdArgs.add(argString);
     }
 
     var terminal = false;
     if (!daemon) {
-      cmdArgs = '--attach --interactive $cmdArgs';
+      cmdArgs = ['--attach','--interactive', ...cmdArgs];
       terminal = true;
     }
-    dockerRun('run', '$cmdArgs ${image.fullname}', terminal: terminal);
+    cmdArgs.add(image.fullname);
+    dockerRun('run', cmdArgs, terminal: terminal);
   }
 
   /// Returns a list of containers
@@ -115,18 +116,19 @@ class Docker {
 
   /// internal function to provide a consistent method of handling
   /// failed execution of the docker command.
-  List<String> _dockerRun(String cmd, String args, {bool terminal = false}) {
-    final progress = 'docker $cmd $args'
-        .start(nothrow: true, terminal: terminal, progress: Progress.capture());
+  List<String> _dockerRun(String cmd, List<String> args, {bool terminal = false}) {
+    final processResult =
+      Process.runSync('docker',[cmd, ...args], runInShell: terminal);
 
-    if (progress.exitCode != 0) {
+    if (processResult.exitCode != 0) {
       throw DockerCommandFailed(
-          cmd, args, progress.exitCode!, progress.lines.join('\n'));
+          cmd, args.join(' '), processResult.exitCode, processResult.stderr.toString());
     }
-    return progress.lines;
+
+    return processResult.stdout.toString().trim().split('\n');
   }
 }
 
 /// runs the passed docker command.
-List<String> dockerRun(String cmd, String args, {bool terminal = false}) =>
+List<String> dockerRun(String cmd, List<String> args, {bool terminal = false}) =>
     Docker()._dockerRun(cmd, args, terminal: terminal);

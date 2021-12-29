@@ -50,7 +50,7 @@ class Volume {
   /// deletes this docker volume.
   /// Throws a [DockerCommandFailed] if the delete fails.
   void delete() {
-    dockerRun('volume', 'rm $name');
+    dockerRun('volume', ['rm', name]);
   }
 
   /// Creates a docker volume
@@ -60,7 +60,7 @@ class Volume {
   /// If an error occurs a [VolumeCreateException] is thrown
   static Volume create({String? name, String driver = 'local'}) {
     final givenName =
-        dockerRun('volume', 'create ${name ?? ''}  --driver $driver').first;
+        dockerRun('volume', ['create', name ?? '', '--driver', driver]).first;
 
     final volume = Volumes().findByName(givenName);
     if (volume == null) {
